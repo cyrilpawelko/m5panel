@@ -23,11 +23,11 @@ Actually, it just displays the 6 specified OpenHAB item's Label and Status, and 
  - No touch screen support
 
 ## Todo
-[] WifiManager for Wifi and items setup
-[] Provide binary releases
-[] Fancy font and correct encoding
-[] Fancy widgets (gauge, switch, garagedoor, ...)
-[] Advanced widgets (weather, ...)
-[] Touch screen support for commands (switchs, ...)
-[] Multi-page navigation
-[] Advanced configuration method (for widgets, ...)
+- [ ] WifiManager for Wifi and items setup
+- [ ] Provide binary releases
+- [ ] Fancy font and correct encoding
+- [ ] Fancy widgets (gauge, switch, garagedoor, ...)
+- [ ] Advanced widgets (weather, ...)
+- [ ] Touch screen support for commands (switchs, ...)
+- [ ] Multi-page navigation
+- [ ] Advanced configuration method (for widgets, ...)
