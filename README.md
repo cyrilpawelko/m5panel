@@ -1,5 +1,6 @@
 # m5Panel for OpenHAB
-[My image](doc/m5panel.jpg)
+![m5paper](doc/m5panel.jpg)
+
 ## Introduction
 
 This is a preliminary release of using an [m5paper](https://m5stack.com/products/m5paper-esp32-development-kit-960x540-4-7-eink-display-235-ppi) as an automation panel for OpenHAB.
@@ -28,6 +29,7 @@ Actually, it just displays the 6 specified OpenHAB item's Label and Status, and 
 - [ ] Provide binary releases
 - [ ] Fancy font and correct encoding
 - [ ] Fancy widgets (gauge, switch, garagedoor, ...)
+- [ ] Dynamic updates
 - [ ] Advanced widgets (weather, ...)
 - [ ] Touch screen support for commands (switchs, ...)
 - [ ] Multi-page navigation
