@@ -93,7 +93,6 @@ void button(byte _x, byte _y, const String &_title, const String &_value)
     canvas.fillRoundRect(xLeftCorner-2,yLeftCorner-2,BUTTON_SIZE+4,BUTTON_SIZE+4,5,15);
     canvas.fillRoundRect(xLeftCorner,yLeftCorner,BUTTON_SIZE,BUTTON_SIZE,5,0);
     
-    
     // DRAW TITLE
     canvas.setTextSize(2);
     xTextAdjust = (BUTTON_SIZE - canvas.textWidth(_title))/2;
@@ -108,6 +107,7 @@ void button(byte _x, byte _y, const String &_title, const String &_value)
 void setup()
 {
     M5.begin();
+    //WiFi.config(staticIP, subnet, gateway, dns); 
     //M5.EPD.SetRotation(180);
     M5.EPD.Clear(true);
     M5.RTC.begin();
@@ -131,7 +131,6 @@ void setup()
 // LOOP
 void loop()
 {
-    
     for(byte i = 0; i < 6; i++) {
         String item = openhabItems[i];
         if (item != "") {
@@ -145,8 +144,6 @@ void loop()
             button(x, y, label, state);
         }
     }
-   
     canvas.pushCanvas(0,0,UPDATE_MODE_GL16); 
     delay(REFRESH_INTERVAL * 1000);
-   
 }
