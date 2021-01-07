@@ -16,6 +16,7 @@ It has been tested with OpenHAB 2.5 and 3.0
 
 ## How to
  - Clone and open in PlatformIO
+ - Copy defs-sample.h to defs.h
  - Edit defs.h and customize:
     - Wifi settings
     - Openhab host and port
