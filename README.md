@@ -24,7 +24,7 @@ It has been tested with OpenHAB 2.5 and 3.0
 - Upload to m5paper
 - Monitor through serial port
 
-No special configuration is needed on the OpenHAB site. Just check you can reach REST API at http://<OPENHAB_HOST>:<OPENHAB_PORT>/items
+No special configuration is needed on the OpenHAB side. Just check you can reach REST API at http://<OPENHAB_HOST>:<OPENHAB_PORT>/items
 
 ## Known issues
  - Incorrect display of special chars and accents (probably due to the basic font used)
@@ -32,6 +32,7 @@ No special configuration is needed on the OpenHAB site. Just check you can reach
 
 ## Todo
 - [ ] WifiManager for Wifi and items setup
+- [ ] Support https connection to OpenHAB
 - [ ] Provide binary releases
 - [ ] Fancy font and correct encoding
 - [ ] Dynamic updates
