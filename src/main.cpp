@@ -3,6 +3,9 @@
 #include "defs.h"
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+//#include <AutoConnect.h>
+//#include <SPIFFS.h>
+#include <FS.h>
 
 M5EPD_Canvas canvas(&M5.EPD);
 String restUrl = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/rest");
@@ -15,6 +18,8 @@ unsigned long upTime;
 #define BUTTONS_X               3       // bttons columns
 #define BUTTONS_Y               2       // buttons rows
 #define BUTTON_SIZE             210     // button widht and height
+
+// m5paper code
 
 boolean httpRequest(String &_url,String &_response)
 {
@@ -115,6 +120,31 @@ void setup()
     canvas.createCanvas(960, 540);
     canvas.setTextSize(3);
 
+    // FS Setup
+    Serial.println(F("Inizializing FS..."));
+    if (SPIFFS.begin()){
+        Serial.println(F("SPIFFS mounted correctly."));
+    }else{
+        Serial.println(F("!An error occurred during SPIFFS mounting"));
+    }
+
+    // Get all information of SPIFFS
+ 
+    unsigned int totalBytes = SPIFFS.totalBytes();
+    unsigned int usedBytes = SPIFFS.usedBytes();
+ 
+    Serial.println("===== File system info =====");
+ 
+    Serial.print("Total space:      ");
+    Serial.print(totalBytes);
+    Serial.println("byte");
+ 
+    Serial.print("Total space used: ");
+    Serial.print(usedBytes);
+    Serial.println("byte");
+ 
+    Serial.println();
+
 // SETUP WIFI
     Serial.println("Starting Wifi");
     WiFi.begin(WIFI_SSID, WIFI_PSK);
@@ -131,6 +161,7 @@ void setup()
 // LOOP
 void loop()
 {
+    
     for(byte i = 0; i < 6; i++) {
         String item = openhabItems[i];
         if (item != "") {
