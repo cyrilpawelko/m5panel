@@ -27,13 +27,14 @@ It has been tested with OpenHAB 2.5 and 3.0
 
 Then, a sitemap containing the items to be displayed must be created.
 Here is a sample sitemap :
-  sitemap m5panel label="m5panel" {
-  	Default item=HueSensor1Temperature      label="Outside[%.1f°]" 
-  	Default item=SondeTH4_Temperature 		label="Cellar[%.1f]"
-  	Default item=AqaraTemp02Temperature     label="Bedroom[%.1f]" icon=""
-  	Default item=SonoffRelay2Power          label="Cellar" icon="light"
-  	Default item=gd_currstate               label="Garage[%s]" icon=""
-  }
+
+    sitemap m5panel label="m5panel" {
+    	Default item=HueSensor1Temperature      label="Outside[%.1f°]" 
+    	Default item=SondeTH4_Temperature 	label="Cellar[%.1f]"
+    	Default item=AqaraTemp02Temperature     label="Bedroom[%.1f]" icon=""
+    	Default item=SonoffRelay2Power          label="Cellar" icon="light"
+    	Default item=gd_currstate               label="Garage[%s]" icon=""
+    }
 
 Sitemap rules :
 - Use sitemap label formatting
