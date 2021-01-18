@@ -6,12 +6,4 @@
 
 #define REFRESH_INTERVAL 20                 // Refresh interval in seconds
 
-#define maxOpenhabItems 6                   // Do not modify
-String openhabItems[maxOpenhabItems] = {    // Specifiy OpenHAB items
-    "SonoffTemp01Temperature",              // "" for none
-    "SonoffTemp01Humidity",
-    "Esp03_Ultrasonic_Volume",
-    "gd_currstate",
-    "SonoffRelay1Power",
-    "SondeTH4_Temperature"
-};
+#define OPENHAB_SITEMAP "m5panel"           // Name of displayed sitemap
