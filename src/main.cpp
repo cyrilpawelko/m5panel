@@ -109,18 +109,18 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
     canvas.drawString(_title,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+15);
     
     if ( _icon == "") 
-    {
-        // Draw icon and bottom value
-        canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
-        canvas.setTextDatum(TC_DATUM);
-        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-40);
-    }
-    else
     {   
         // Draw value centered
         canvas.setTextSize(FONT_SIZE_STATUS_CENTER);
         canvas.setTextDatum(TC_DATUM);
         canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-110);
+    }
+    else
+    {
+        // Draw icon and bottom value
+        canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
+        canvas.setTextDatum(TC_DATUM);
+        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-40);
     }
 }
 
