@@ -20,23 +20,44 @@ It has been tested with OpenHAB 2.5 and 3.0
  - Edit defs.h and customize:
     - Wifi settings
     - Openhab host and port
-    - Items to be displayed (as in OpenHAB configuration)
-- Upload to m5paper
-- Monitor through serial port
+    - Sitemap to use (default: m5paper)
+ - Upload filesystem image (from PlatformIO menu)
+ - Compile and upload to m5paper
+ - Monitor through serial port
 
-No special configuration is needed on the OpenHAB side. Just check you can reach REST API at http://<OPENHAB_HOST>:<OPENHAB_PORT>/items
+Then, a sitemap containing the items to be displayed must be created.
+Here is a sample sitemap :
+  sitemap m5panel label="m5panel" {
+  	Default item=HueSensor1Temperature      label="Outside[%.1f°]" 
+  	Default item=SondeTH4_Temperature 		label="Cellar[%.1f]"
+  	Default item=AqaraTemp02Temperature     label="Bedroom[%.1f]" icon=""
+  	Default item=SonoffRelay2Power          label="Cellar" icon="light"
+  	Default item=gd_currstate               label="Garage[%s]" icon=""
+  }
+
+Sitemap rules :
+- Use sitemap label formatting
+- Label is used as the button title
+- If no icon is specified (icon=""), the item state will be displayed in the center of the button
+- Else, it will be displayed at the bottom, in a smaller font, under the icon location (actually, icons are not displayed)
+- 6 items max are supported
+
+To help :
+- Display your sitemap at http://<OPENHAB_HOST>:<OPENHAB_PORT>/basicui/app?sitemap=<OPENHAB_SITEMAP>
+- Check you can reach REST API at http://<OPENHAB_HOST>:<OPENHAB_PORT>/rest/sitemaps/<OPENHAB_SITEMAP>
+
 
 ## Known issues
- - Incorrect display of special chars and accents (probably due to the basic font used)
+ - First displays are slow (due to font caching)
  - No touch screen support
 
 ## Todo
 - [ ] WifiManager for Wifi and items setup
 - [ ] Support https connection to OpenHAB
 - [ ] Provide binary releases
-- [ ] Fancy font and correct encoding
+- [X] Nice font and correct encoding
 - [ ] Dynamic updates
-- [ ] Fancy widgets (gauge, switch, garagedoor, ...)
+- [ ] Nice widgets (gauge, switch, garagedoor, ...)
 - [ ] Advanced widgets (weather, ...)
 - [ ] Touch screen support for commands (switchs, ...)
 - [ ] Multi-page navigation
