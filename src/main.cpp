@@ -16,10 +16,12 @@
 
 #define FONT_SIZE_LABEL         32 //30
 #define FONT_SIZE_STATUS_CENTER 48
-#define FONT_SIZE_STATUS_BOTTOM 28
+#define FONT_SIZE_STATUS_BOTTOM 32
 
 M5EPD_Canvas canvas(&M5.EPD);
 String restUrl = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/rest");
+String iconURL = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/icon");
+
 unsigned long upTime;
 
 #ifndef OPENHAB_SITEMAP
@@ -117,7 +119,29 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
     }
     else
     {
-        // Draw icon and bottom value
+        // Draw icon
+        /*String thisIconURL=iconURL+"/"+_icon+"?state="+_value+"&format=png";
+        int thisIconURLLenght = thisIconURL.length()+1;
+        char cThisIconURL[thisIconURLLenght];
+        thisIconURL.toCharArray(cThisIconURL,thisIconURLLenght);
+        Serial.println(cThisIconURL);
+        canvas.drawPngUrl(cThisIconURL);*/
+
+        String iconFile = "/icons/"+_icon+"-"+_value+".png";
+        iconFile.toLowerCase();
+        if (! SPIFFS.exists(iconFile))
+        {
+            iconFile = "/icons/"+_icon+".png";
+            iconFile.toLowerCase();
+            if (! SPIFFS.exists(iconFile))
+            {
+                String iconFile = "/icons/unknow.png";
+            }
+        }
+        Serial.println("icon file="+iconFile);
+        canvas.drawPngFile(SPIFFS,iconFile.c_str(),xLeftCorner+BUTTON_SIZE/2-48,yLeftCorner+50,0,0,0,0,2);
+        
+        // Draw bottom value
         canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
         canvas.setTextDatum(TC_DATUM);
         canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-40);
@@ -167,7 +191,6 @@ void setup()
 
     canvas.createCanvas(960, 540);
     canvas.loadFont("/GenSenRounded-R.ttf", SPIFFS);
-    
     canvas.setTextSize(FONT_SIZE_LABEL);
     canvas.createRender(FONT_SIZE_LABEL,256);
     canvas.createRender(FONT_SIZE_STATUS_CENTER,256);
