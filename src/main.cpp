@@ -158,7 +158,7 @@ void setup()
     IPAddress subnet(255,255,255,0);  // Subnet Mask
     IPAddress dns1(xxx,xxx,xxx,xxx);    // DNS1 IP
     IPAddress dns2(xxx,xxx,xxx,xxx);    // DNS2 IP
-    WiFi.config(staticIP, subnet, gateway, dns); 
+    WiFi.config(ip, gateway, subnet, dns1, dns2);
 */
     // M5.EPD.SetRotation(180);
     M5.EPD.Clear(true);
@@ -177,6 +177,8 @@ void setup()
     unsigned int totalBytes = SPIFFS.totalBytes();
     unsigned int usedBytes = SPIFFS.usedBytes();
  
+    // TODO : Should fail and stop if SPIFFS error
+
     Serial.println("===== File system info =====");
  
     Serial.print("Total space:      ");
@@ -191,6 +193,7 @@ void setup()
 
     canvas.createCanvas(960, 540);
     canvas.loadFont("/GenSenRounded-R.ttf", SPIFFS);
+    // TODO : Should fail and stop if font not found
     canvas.setTextSize(FONT_SIZE_LABEL);
     canvas.createRender(FONT_SIZE_LABEL,256);
     canvas.createRender(FONT_SIZE_STATUS_CENTER,256);
