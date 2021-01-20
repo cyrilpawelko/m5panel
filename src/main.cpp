@@ -15,7 +15,7 @@
 #define BUTTON_SIZE             210     // button widht and height
 
 #define FONT_SIZE_LABEL         32 //30
-#define FONT_SIZE_STATUS_CENTER 48
+#define FONT_SIZE_STATUS_CENTER 56
 #define FONT_SIZE_STATUS_BOTTOM 32
 
 M5EPD_Canvas canvas(&M5.EPD);
@@ -100,8 +100,8 @@ boolean getItem(String &_item, String &_state, String &_type, String &_pattern, 
 void button(byte _x, byte _y, const String &_title, const String &_value, const String &_icon)
 {
     // Draw rectangle
-    int xLeftCorner = 210 + _x * (40 + BUTTON_SIZE);
-    int yLeftCorner =  40 + _y * (40 + BUTTON_SIZE);
+    int xLeftCorner = 40 + _x * (40 + BUTTON_SIZE); // 210
+    int yLeftCorner = 40 + _y * (40 + BUTTON_SIZE);
     canvas.fillRoundRect(xLeftCorner-2,yLeftCorner-2,BUTTON_SIZE+4,BUTTON_SIZE+4,5,15);
     canvas.fillRoundRect(xLeftCorner,yLeftCorner,BUTTON_SIZE,BUTTON_SIZE,5,0);
 
@@ -115,7 +115,7 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
         // Draw value centered
         canvas.setTextSize(FONT_SIZE_STATUS_CENTER);
         canvas.setTextDatum(TC_DATUM);
-        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-110);
+        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-120);
     }
     else
     {
@@ -139,7 +139,7 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
             }
         }
         Serial.println("icon file="+iconFile);
-        canvas.drawPngFile(SPIFFS,iconFile.c_str(),xLeftCorner+BUTTON_SIZE/2-48,yLeftCorner+50,0,0,0,0,2);
+        canvas.drawPngFile(SPIFFS,iconFile.c_str(),xLeftCorner+BUTTON_SIZE/2-48,yLeftCorner+55,0,0,0,0,2);
         
         // Draw bottom value
         canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
