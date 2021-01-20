@@ -192,7 +192,7 @@ void setup()
     Serial.println();
 
     canvas.createCanvas(960, 540);
-    canvas.loadFont("/GenSenRounded-R.ttf", SPIFFS);
+    canvas.loadFont("/FreeSansBold.ttf", SPIFFS);
     // TODO : Should fail and stop if font not found
     canvas.setTextSize(FONT_SIZE_LABEL);
     canvas.createRender(FONT_SIZE_LABEL,256);
