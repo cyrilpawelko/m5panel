@@ -124,14 +124,6 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
     }
     else
     {
-        // Draw icon
-        /*String thisIconURL=iconURL+"/"+_icon+"?state="+_value+"&format=png";
-        int thisIconURLLenght = thisIconURL.length()+1;
-        char cThisIconURL[thisIconURLLenght];
-        thisIconURL.toCharArray(cThisIconURL,thisIconURLLenght);
-        Serial.println(cThisIconURL);
-        canvas.drawPngUrl(cThisIconURL);*/
-
         String iconFile = "/icons/"+_icon+"-"+_value+".png"; // Try to find dynamic icon ...
         iconFile.toLowerCase();
         if (! SPIFFS.exists(iconFile))
