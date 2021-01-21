@@ -7,3 +7,5 @@
 #define REFRESH_INTERVAL 20                 // Refresh interval in seconds
 
 #define OPENHAB_SITEMAP "m5panel"           // Name of displayed sitemap
+
+#define DISPLAY_SYSINFO false

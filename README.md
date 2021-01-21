@@ -41,12 +41,12 @@ Sitemap rules :
 - Label is used as the button title
 - If no icon is specified (icon=""), the item state will be displayed in the center of the button
 - Else, it will be displayed at the bottom, in a smaller font, under the icon location (actually, icons are not displayed)
-- 6 items max are supported
+- 6 items max are supported for now
+- Don't use other sitemap features (frames, ...)
 
-To help :
+If you're in trouble :
 - Display your sitemap at http://<OPENHAB_HOST>:<OPENHAB_PORT>/basicui/app?sitemap=<OPENHAB_SITEMAP>
 - Check you can reach REST API at http://<OPENHAB_HOST>:<OPENHAB_PORT>/rest/sitemaps/<OPENHAB_SITEMAP>
-
 
 ## Known issues
  - First displays are slow (due to font caching)
@@ -58,8 +58,8 @@ To help :
 - [ ] Provide binary releases
 - [X] Nice font and correct encoding
 - [ ] Dynamic updates
-- [ ] Nice widgets (gauge, switch, garagedoor, ...)
-- [ ] Advanced widgets (weather, ...)
+- [X] Basic icon set
+- [ ] Advanced widgets (gauge, weather, ...)
 - [ ] Touch screen support for commands (switchs, ...)
 - [ ] Multi-page navigation
-- [ ] Advanced configuration method (for widgets, ...)
+- [ ] Advanced configuration method (for widgets, fonts ...)

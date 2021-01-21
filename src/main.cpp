@@ -16,7 +16,7 @@
 
 #define FONT_SIZE_LABEL         32 //30
 #define FONT_SIZE_STATUS_CENTER 56
-#define FONT_SIZE_STATUS_BOTTOM 32
+#define FONT_SIZE_STATUS_BOTTOM 36
 
 M5EPD_Canvas canvas(&M5.EPD);
 String restUrl = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/rest");
@@ -27,6 +27,11 @@ unsigned long upTime;
 #ifndef OPENHAB_SITEMAP
     #define OPENHAB_SITEMAP "m5paper"
 #endif
+
+#ifndef OPENHAB_SITEMAP
+    #define DISPLAY_SYSINFO false
+#endif
+
 
 // m5paper code
 
@@ -127,15 +132,15 @@ void button(byte _x, byte _y, const String &_title, const String &_value, const 
         Serial.println(cThisIconURL);
         canvas.drawPngUrl(cThisIconURL);*/
 
-        String iconFile = "/icons/"+_icon+"-"+_value+".png";
+        String iconFile = "/icons/"+_icon+"-"+_value+".png"; // Try to find dynamic icon ...
         iconFile.toLowerCase();
         if (! SPIFFS.exists(iconFile))
         {
-            iconFile = "/icons/"+_icon+".png";
+            iconFile = "/icons/"+_icon+".png";              // else try to find non dynamic icon
             iconFile.toLowerCase();
             if (! SPIFFS.exists(iconFile))
             {
-                String iconFile = "/icons/unknow.png";
+                String iconFile = "/icons/unknow.png";      // else use icon "unknown"
             }
         }
         Serial.println("icon file="+iconFile);
@@ -252,6 +257,20 @@ void loop()
         }
     }
     sitemap.clear();
+
+    if ( DISPLAY_SYSINFO ) {
+        // Show system information
+        canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
+        canvas.setTextDatum(TL_DATUM);
+
+        upTime = millis()/(60000);
+        canvas.drawString("Uptime: ",800,430);
+        canvas.drawString(String(upTime)+ " min",800,470);
+
+        canvas.drawString("Voltage: ",800,340);
+        canvas.drawString(String(M5.getBatteryVoltage())+ " mV",800,380);
+    }
     canvas.pushCanvas(0,0,UPDATE_MODE_GL16); 
+
     delay(REFRESH_INTERVAL * 1000);
 }
