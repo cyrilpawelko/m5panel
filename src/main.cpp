@@ -1,39 +1,63 @@
 #include <M5EPD.h>
 #include <WiFi.h>
-#include "defs.h"
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <SPIFFS.h>
 #include <FS.h>
+#include "M5PanelWidget.h"
+#include "defs.h"
+#include <regex>
 
 #define ERR_WIFI_NOT_CONNECTED  "ERROR: Wifi not connected"
 #define ERR_HTTP_ERROR          "ERROR: HTTP code "
 #define ERR_GETITEMSTATE        "ERROR in getItemState"
 
-#define BUTTONS_X               3       // bttons columns
-#define BUTTONS_Y               2       // buttons rows
-#define BUTTON_SIZE             210     // button widht and height
+#define DEBUG                   true
 
-#define FONT_SIZE_LABEL         32 //30
-#define FONT_SIZE_STATUS_CENTER 56
-#define FONT_SIZE_STATUS_BOTTOM 36
+#define WIDGET_COUNT            6
+#define FONT_CACHE_SIZE         255 // 256
+// Global vars
 
 M5EPD_Canvas canvas(&M5.EPD);
+M5PanelWidget* widgets = new M5PanelWidget[WIDGET_COUNT];
+HTTPClient httpClient;
+HTTPClient httpSubscribeClient;
+WiFiClient SubscribeClient;
+
 String restUrl = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/rest");
 String iconURL = "http://" + String(OPENHAB_HOST) + String(":") +String(OPENHAB_PORT) + String("/icon");
+String subscriptionURL = "";
 
 unsigned long upTime;
 
+DynamicJsonDocument jsonDoc(30000); // size to be checked
+DynamicJsonDocument sitemap(30000); // Test
+
+uint previousSysInfoMillis = 0;
+uint currentSysInfoMillis;
+
 #ifndef OPENHAB_SITEMAP
-    #define OPENHAB_SITEMAP "m5paper"
+    #define OPENHAB_SITEMAP "m5panel"
 #endif
 
 #ifndef OPENHAB_SITEMAP
     #define DISPLAY_SYSINFO false
 #endif
 
+/* Reminders
+    EPD canvas library https://docs.m5stack.com/#/en/api/m5paper/epd_canvas
+    Text aligment https://github.com/m5stack/M5Stack/blob/master/examples/Advanced/Display/TFT_Float_Test/TFT_Float_Test.ino
+*/
 
-// m5paper code
+// HTTP and REST
+
+void debug(String message)
+{
+    if ( DEBUG )
+    {
+        Serial.println(message);
+    }
+}
 
 boolean httpRequest(String &_url,String &_response)
 {
@@ -46,6 +70,7 @@ boolean httpRequest(String &_url,String &_response)
         return false;
     }
     http.useHTTP10(true);
+    http.setReuse(false);
     http.begin(_url);
     int httpCode = http.GET();
     if (httpCode != HTTP_CODE_OK)
@@ -57,92 +82,131 @@ boolean httpRequest(String &_url,String &_response)
     }
     _response = http.getString();
     http.end();
-    Serial.print("HTTP request done");
+    Serial.println("HTTP request done");
     return true;
 }
 
-String getItemState(String _item)
-{
-    String response;
-    Serial.println(String("getItemState ") + _item);
-    if (httpRequest(restUrl + "/items/" + _item,response))
+boolean subscribe(){
+    String subscribeResponse;
+    httpClient.useHTTP10(true);
+    httpClient.begin(restUrl + "/sitemaps/events/subscribe");
+    int httpCode = httpClient.POST("");
+    if (httpCode != HTTP_CODE_OK)
     {
-        DynamicJsonDocument doc(65536);
-        deserializeJson(doc, response);
-        String itemState = doc["state"];
-        String itemName = doc["name"];
-        Serial.println(itemName + String(":") + itemState);
-        doc.clear();
-        return itemState;
+        Serial.println(String(ERR_HTTP_ERROR) + String(httpCode));
+        httpClient.end();
+        return false;        
     }
-    else
-    {
-        return ERR_GETITEMSTATE;
-    }
-}
+    subscribeResponse = httpClient.getString();
+    httpClient.end();
 
-boolean getItem(String &_item, String &_state, String &_type, String &_pattern, String &_label )
-{
-    String response;
-    Serial.println(String("getItemState ") + _item);
-    if (httpRequest(restUrl + "/items/" + _item,response))
-    {
-        DynamicJsonDocument doc(65536);
-        deserializeJson(doc, response);
-        _state   = doc["state"].as<String>();
-        _type    = doc["type"].as<String>();
-        _pattern = doc["statedescription"]["pattern"].as<String>();
-        _label   = doc["label"].as<String>();
-        doc.clear();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+    //Serial.println("HTTP SUBSCRIBE: " + subscribeResponse);
+    deserializeJson(jsonDoc,subscribeResponse);
 
-void button(byte _x, byte _y, const String &_title, const String &_value, const String &_icon)
-{
-    // Draw rectangle
-    int xLeftCorner = 40 + _x * (40 + BUTTON_SIZE); // 210
-    int yLeftCorner = 40 + _y * (40 + BUTTON_SIZE);
-    canvas.fillRoundRect(xLeftCorner-2,yLeftCorner-2,BUTTON_SIZE+4,BUTTON_SIZE+4,5,15);
-    canvas.fillRoundRect(xLeftCorner,yLeftCorner,BUTTON_SIZE,BUTTON_SIZE,5,0);
-
-    // Draw title
-    canvas.setTextSize(FONT_SIZE_LABEL); //3
-    canvas.setTextDatum(TC_DATUM);
-    canvas.drawString(_title,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+15);
-    
-    if ( _icon == "") 
-    {   
-        // Draw value centered
-        canvas.setTextSize(FONT_SIZE_STATUS_CENTER);
-        canvas.setTextDatum(TC_DATUM);
-        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-120);
-    }
-    else
-    {
-        String iconFile = "/icons/"+_icon+"-"+_value+".png"; // Try to find dynamic icon ...
-        iconFile.toLowerCase();
-        if (! SPIFFS.exists(iconFile))
-        {
-            iconFile = "/icons/"+_icon+".png";              // else try to find non dynamic icon
-            iconFile.toLowerCase();
-            if (! SPIFFS.exists(iconFile))
-            {
-                String iconFile = "/icons/unknow.png";      // else use icon "unknown"
-            }
-        }
-        Serial.println("icon file="+iconFile);
-        canvas.drawPngFile(SPIFFS,iconFile.c_str(),xLeftCorner+BUTTON_SIZE/2-48,yLeftCorner+55,0,0,0,0,2);
+    //String subscriptionURL = jsonDoc["Location"].as<String>();
+    String subscriptionURL = jsonDoc["context"]["headers"]["Location"][0];
+    debug("Full subscriptionURL: " + subscriptionURL);
+    subscriptionURL = subscriptionURL.substring(subscriptionURL.indexOf("/rest/sitemaps")) + "?sitemap=m5panel&pageid=m5panel";
+    debug("subscriptionURL: " + subscriptionURL);
         
-        // Draw bottom value
-        canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
-        canvas.setTextDatum(TC_DATUM);
-        canvas.drawString(_value,xLeftCorner+BUTTON_SIZE/2,yLeftCorner+BUTTON_SIZE-40);
+    //SubscribeClient.connect("192.168.3.11",8080);
+    SubscribeClient.connect(OPENHAB_HOST,OPENHAB_PORT);
+    SubscribeClient.println("GET " + subscriptionURL + " HTTP/1.1");
+    //SubscribeClient.println("Host: nas.pawelko.local:8080");
+    SubscribeClient.println("Host: " + String(OPENHAB_HOST) + ":" + String(OPENHAB_PORT) );
+    SubscribeClient.println("Accept: text/event-stream");
+    SubscribeClient.println("Connection: keep-alive");
+    SubscribeClient.println("");
+    return true;
+}
+
+void parseWidgetLabel(String sitemapLabel, String &label, String &state )
+{
+    int firstOpeningBracket = sitemapLabel.indexOf('[');
+    int firstClosingBracket = sitemapLabel.indexOf(']');
+    if ( (firstOpeningBracket == -1) || (firstClosingBracket == -1) ) // Value not found
+    {
+        sitemapLabel.trim();
+        label = sitemapLabel;
+        state = "";
     }
+    else
+    {
+        label = sitemapLabel.substring(0,firstOpeningBracket);
+        label.trim();
+        state = sitemapLabel.substring(firstOpeningBracket + 1, firstClosingBracket);
+        state.trim();
+    }
+}
+
+void updateSiteMap(){
+    String sitemapStr;
+    httpRequest(restUrl + "/sitemaps/" + OPENHAB_SITEMAP, sitemapStr);
+    deserializeJson(sitemap, sitemapStr);
+    for(byte i = 0; i < 6; i++) {
+        if (! sitemap["homepage"]["widgets"][i]["type"].isNull())
+        {
+        String type = sitemap["homepage"]["widgets"][i]["type"];
+        String slabel = sitemap["homepage"]["widgets"][i]["label"];
+        String label = "";
+        String state = "";
+        parseWidgetLabel(slabel, label, state);
+        String icon = sitemap["homepage"]["widgets"][i]["icon"];
+        Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state);
+        widgets[i].update(label, state, icon);
+        widgets[i].draw(UPDATE_MODE_GC16); //  UPDATE_MODE_GL16
+        }
+    }
+    sitemap.clear();
+}
+
+void parseSubscriptionData(String jsonDataStr)
+{
+    DynamicJsonDocument jsonData(30000);
+    deserializeJson(jsonData, jsonDataStr);
+    if (! jsonData["widgetId"].isNull() ) // Data Widget (subscription)
+    {
+        Serial.println("Data Widget (subscription)");
+        byte widgetId = jsonData["widgetId"];
+        String slabel = jsonData["label"];
+        String label = "";
+        String state = "";
+        parseWidgetLabel(slabel, label, state);
+        Serial.println("Update Item " + String(widgetId) + " label=" + label + " state=" + state);
+        widgets[widgetId].update(label, state);
+        widgets[widgetId].draw(UPDATE_MODE_GC16); // UPDATE_MODE_A2 
+    }
+    else if (! jsonData["TYPE"].isNull() )
+    {
+        String jsonDataType = jsonData["TYPE"];
+        if ( jsonDataType.equals("ALIVE") )
+        {
+            Serial.println("Subscription Alive");
+        }
+        else if ( jsonDataType.equals("SITEMAP_CHANGED") )
+        {
+            Serial.println("Sitemap changed, reloading");
+            updateSiteMap();
+        }
+    }
+}
+
+void displaySysInfo()
+{
+    // Show system information
+    canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
+    canvas.setTextDatum(TL_DATUM);
+
+    canvas.drawString("Free Heap:",0,230);
+    canvas.drawString(String(ESP.getFreeHeap())+ " B",0,270);
+
+    canvas.drawString("Voltage: ",0,330);
+    canvas.drawString(String(M5.getBatteryVoltage())+ " mV",0,370);
+
+    upTime = millis()/(60000);
+    canvas.drawString("Uptime: ",0,430);
+    canvas.drawString(String(upTime)+ " min",0,470);
+    canvas.pushCanvas(780,0,UPDATE_MODE_A2);
 }
 
 void setup()
@@ -170,7 +234,6 @@ void setup()
     }
 
     // Get all information of SPIFFS
- 
     unsigned int totalBytes = SPIFFS.totalBytes();
     unsigned int usedBytes = SPIFFS.usedBytes();
  
@@ -188,13 +251,14 @@ void setup()
  
     Serial.println();
 
-    canvas.createCanvas(960, 540);
+    canvas.createCanvas(160, 540);
     canvas.loadFont("/FreeSansBold.ttf", SPIFFS);
     // TODO : Should fail and stop if font not found
+
     canvas.setTextSize(FONT_SIZE_LABEL);
-    canvas.createRender(FONT_SIZE_LABEL,256);
-    canvas.createRender(FONT_SIZE_STATUS_CENTER,256);
-    canvas.createRender(FONT_SIZE_STATUS_BOTTOM,256);
+    canvas.createRender(FONT_SIZE_LABEL,FONT_CACHE_SIZE);
+    canvas.createRender(FONT_SIZE_STATUS_CENTER,FONT_CACHE_SIZE);
+    canvas.createRender(FONT_SIZE_STATUS_BOTTOM,FONT_CACHE_SIZE);
 
     // Setup Wifi
     Serial.println("Starting Wifi");
@@ -207,62 +271,44 @@ void setup()
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+
+    // Init widgets
+    for(byte i = 0; i < WIDGET_COUNT; i++) {
+        int x = i % BUTTONS_X;
+        int y = i / BUTTONS_X;
+        widgets[i].init(i, 0, 40 + x * (40 + BUTTON_SIZE), 40 + y * (40 + BUTTON_SIZE));
+    }
+    updateSiteMap();
 }
 
 // Loop
 void loop()
 {
-    String sitemapStr;
-    httpRequest(restUrl + "/sitemaps/" + OPENHAB_SITEMAP, sitemapStr);
-    DynamicJsonDocument sitemap(65536);
-    deserializeJson(sitemap, sitemapStr);
-    for(byte i = 0; i < 6; i++) {
-        if (! sitemap["homepage"]["widgets"][i]["type"].isNull())
-        {
-        String type = sitemap["homepage"]["widgets"][i]["type"];
-        String slabel = sitemap["homepage"]["widgets"][i]["label"];
-        String label = "";
-        String state;
-        int firstOpeningBracket = slabel.indexOf('[');
-        int firstClosingBracket = slabel.indexOf(']');
-
-        if ( (firstOpeningBracket == -1) || (firstClosingBracket == -1) ) // Value not found
-        {
-            slabel.trim();
-            label = slabel;
-            state = "";
-        }
-        else
-        {
-            label = slabel.substring(0,firstOpeningBracket);
-            label.trim();
-            state = slabel.substring(firstOpeningBracket + 1, firstClosingBracket);
-            state.trim();
-        }
-        
-        String icon = sitemap["homepage"]["widgets"][i]["icon"];
-        Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state);
-        
-        int x = i % BUTTONS_X;
-        int y = i / BUTTONS_X;
-        button(x, y, label, state, icon);
-        }
+    // Subscribe to sitemap
+    if (! SubscribeClient.connected()) {
+        Serial.println("SubscribeClient not connected, connecting...");
+        if (! subscribe()) { delay(300); }
     }
-    sitemap.clear();
 
+    // Check and get subscription data    
+    while (SubscribeClient.available()) {
+        String SubscriptionReceivedData = SubscribeClient.readStringUntil('\n');
+        int dataStart = SubscriptionReceivedData.indexOf("data: ");
+        if (dataStart > -1) // received data contains "data: "
+        {
+            String SubscriptionData = SubscriptionReceivedData.substring(dataStart+6); // cut data before "data: "
+            int dataEnd = SubscriptionData.indexOf("\n\n");
+            SubscriptionData = SubscriptionData.substring(0,dataEnd);
+            parseSubscriptionData(SubscriptionData);
+        }   
+    }
+    
     if ( DISPLAY_SYSINFO ) {
-        // Show system information
-        canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
-        canvas.setTextDatum(TL_DATUM);
-
-        upTime = millis()/(60000);
-        canvas.drawString("Uptime: ",800,430);
-        canvas.drawString(String(upTime)+ " min",800,470);
-
-        canvas.drawString("Voltage: ",800,340);
-        canvas.drawString(String(M5.getBatteryVoltage())+ " mV",800,380);
+        currentSysInfoMillis = millis();
+        if ( (currentSysInfoMillis-previousSysInfoMillis) > 10000) 
+        {
+            previousSysInfoMillis = currentSysInfoMillis;
+            displaySysInfo();
+        }
     }
-    canvas.pushCanvas(0,0,UPDATE_MODE_GL16); 
-
-    delay(REFRESH_INTERVAL * 1000);
 }

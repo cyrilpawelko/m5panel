@@ -71,9 +71,9 @@ television-off;screen-off
 television;screen-on
 signal;signal
 bell;siren
-toggle-switch;switch
+toggle-switch-outline;switch
 toggle-switch-off;switch-off
-toggle-switch;switch-on
+toggle-switch-outline;switch-on
 thermometer;temperature
 progress-question;unknown
 toggle-switch;wallswitch
