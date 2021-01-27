@@ -19,7 +19,7 @@ It has been tested with OpenHAB 2.5 and 3.0
     - Wifi settings
     - Openhab host and port
     - Sitemap to use (default: m5paper)
- - Upload filesystem image (from PlatformIO menu)
+ - Upload filesystem image (from PlatformIO menu, or "pio run -t uploadfs")
  - Compile and upload to m5paper
  - Monitor through serial port
 
@@ -30,7 +30,7 @@ Here is a sample sitemap :
     	Default item=HueSensor1Temperature      label="Outside[%.1f°]" 
     	Default item=SondeTH4_Temperature 	label="Cellar[%.1f]"
     	Default item=AqaraTemp02Temperature     label="Bedroom[%.1f]" icon=""
-    	Default item=SonoffRelay2Power          label="Cellar" icon="light"
+    	Default item=SonoffRelay2Power          label="Cellar[%s]" icon="light"
     	Default item=gd_currstate               label="Garage[%s]" icon=""
     }
 
