@@ -71,7 +71,7 @@ void M5PanelWidget::draw(m5epd_update_mode_t drawMode)
         // Draw bottom value
         canvas->setTextSize(FONT_SIZE_STATUS_BOTTOM); 
         canvas->setTextDatum(TC_DATUM);
-        canvas->drawString(value,BUTTON_SIZE/2+2,BUTTON_SIZE-40+2);
+        canvas->drawString(value,BUTTON_SIZE/2+2,BUTTON_SIZE-45+2); // 40
         bottomTime = millis();
     }
 
