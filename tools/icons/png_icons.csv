@@ -45,6 +45,8 @@ lock-outline;lock
 lock-outline;lock-closed
 lock-open-variant-outline;lock-open
 motion-sensor;motion
+motion-sensor;motion-open
+motion-sensor-off;motion-closed
 wifi;network
 wifi-off;network-off
 wifi;network-on
