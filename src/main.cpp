@@ -51,10 +51,13 @@ uint currentSysInfoMillis;
 
 // HTTP and REST
 
-void debug(String message)
+void debug(String function, String message)
 {
     if ( DEBUG )
     {
+        Serial.print(F("DEBUG (function "));
+        Serial.print(function);
+        Serial.print(F(") :"));
         Serial.println(message);
     }
 }
@@ -62,7 +65,7 @@ void debug(String message)
 boolean httpRequest(String &_url,String &_response)
 {
     HTTPClient http;
-    Serial.println("HTTP request to " + String(_url));
+    debug(F("httpRequest"),"HTTP request to " + String(_url));
     if (WiFi.status() != WL_CONNECTED)
     {
         Serial.println(ERR_WIFI_NOT_CONNECTED);
@@ -82,7 +85,7 @@ boolean httpRequest(String &_url,String &_response)
     }
     _response = http.getString();
     http.end();
-    Serial.println("HTTP request done");
+    debug(F("httpRequest"),F("HTTP request done"));
     return true;
 }
 
@@ -105,14 +108,12 @@ boolean subscribe(){
 
     //String subscriptionURL = jsonDoc["Location"].as<String>();
     String subscriptionURL = jsonDoc["context"]["headers"]["Location"][0];
-    debug("Full subscriptionURL: " + subscriptionURL);
+    debug(F("subscribe"), "Full subscriptionURL: " + subscriptionURL);
     subscriptionURL = subscriptionURL.substring(subscriptionURL.indexOf("/rest/sitemaps")) + "?sitemap=m5panel&pageid=m5panel";
-    debug("subscriptionURL: " + subscriptionURL);
+    debug(F("subscribe"), "subscriptionURL: " + subscriptionURL);
         
-    //SubscribeClient.connect("192.168.3.11",8080);
     SubscribeClient.connect(OPENHAB_HOST,OPENHAB_PORT);
     SubscribeClient.println("GET " + subscriptionURL + " HTTP/1.1");
-    //SubscribeClient.println("Host: nas.pawelko.local:8080");
     SubscribeClient.println("Host: " + String(OPENHAB_HOST) + ":" + String(OPENHAB_PORT) );
     SubscribeClient.println("Accept: text/event-stream");
     SubscribeClient.println("Connection: keep-alive");
@@ -193,7 +194,7 @@ void parseSubscriptionData(String jsonDataStr)
 
 void displaySysInfo()
 {
-    // Show system information
+    // Display system information
     canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
     canvas.setTextDatum(TL_DATUM);
 
