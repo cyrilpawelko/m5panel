@@ -284,7 +284,7 @@ void setup()
 // Loop
 void loop()
 {
-    // Subscribe to sitemap
+    // subscribe or re-subscribe to sitemap
     if (! SubscribeClient.connected()) {
         Serial.println("SubscribeClient not connected, connecting...");
         if (! subscribe()) { delay(300); }

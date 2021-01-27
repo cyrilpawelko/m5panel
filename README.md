@@ -53,13 +53,13 @@ If you're in trouble :
  - No touch screen support
 
 ## Todo
+- [X] Nice font and correct encoding
+- [X] Dynamic updates
+- [X] Basic icon set
+- [ ] Touch screen support for commands (switchs, ...)
 - [ ] WifiManager for Wifi and items setup
 - [ ] Support https connection to OpenHAB
 - [ ] Provide binary releases
-- [X] Nice font and correct encoding
-- [ ] Dynamic updates
-- [X] Basic icon set
 - [ ] Advanced widgets (gauge, weather, ...)
-- [ ] Touch screen support for commands (switchs, ...)
 - [ ] Multi-page navigation
 - [ ] Advanced configuration method (for widgets, fonts ...)
