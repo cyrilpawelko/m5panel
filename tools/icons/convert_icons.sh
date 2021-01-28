@@ -13,5 +13,5 @@ do
         echo "ERROR: $svgfile not found, downloading"
         wget --no-hsts https://api.iconify.design/mdi-$svgfile -O $svgdir/$svgfile
     fi
-    rsvg-convert $svgdir/$svgfile -o $pngdir/$pngfile -w 48
+    rsvg-convert $svgdir/$svgfile -o $pngdir/$pngfile -w 96
 done < png_icons.csv

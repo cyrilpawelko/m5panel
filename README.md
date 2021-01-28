@@ -8,6 +8,7 @@ This is a preliminary release of using a [m5paper](https://m5stack.com/products/
 I want it to be as simple as possible : it queries OpenHAB items through REST API, so much of the configuration will be on the OpenHAB side. I don't want "yet another interface to configure with its cryptic syntax".
   
 Actually, it just displays the 6 specified OpenHAB item's Label and Status. 
+
 While the is no power optimizations, it can already run several hours on battery.
 
 It has been tested with OpenHAB 2.5 and 3.0

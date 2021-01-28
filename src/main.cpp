@@ -36,6 +36,11 @@ DynamicJsonDocument sitemap(30000); // Test
 uint previousSysInfoMillis = 0;
 uint currentSysInfoMillis;
 
+uint previousSubscriptionAliveMillis = 0;
+uint currentSubscriptionAliveMillis;
+
+uint16_t _last_pos_x = 0xFFFF, _last_pos_y = 0xFFFF;
+
 #ifndef OPENHAB_SITEMAP
     #define OPENHAB_SITEMAP "m5panel"
 #endif
@@ -57,7 +62,7 @@ void debug(String function, String message)
     {
         Serial.print(F("DEBUG (function "));
         Serial.print(function);
-        Serial.print(F(") :"));
+        Serial.print(F("): "));
         Serial.println(message);
     }
 }
@@ -115,9 +120,10 @@ boolean subscribe(){
     SubscribeClient.connect(OPENHAB_HOST,OPENHAB_PORT);
     SubscribeClient.println("GET " + subscriptionURL + " HTTP/1.1");
     SubscribeClient.println("Host: " + String(OPENHAB_HOST) + ":" + String(OPENHAB_PORT) );
-    SubscribeClient.println("Accept: text/event-stream");
-    SubscribeClient.println("Connection: keep-alive");
-    SubscribeClient.println("");
+    SubscribeClient.println(F("Accept: text/event-stream"));
+    SubscribeClient.println(F("Connection: keep-alive"));
+    SubscribeClient.println();
+    previousSubscriptionAliveMillis = millis();
     return true;
 }
 
@@ -141,10 +147,13 @@ void parseWidgetLabel(String sitemapLabel, String &label, String &state )
 }
 
 void updateSiteMap(){
+    debug(F("updateSiteMap"),"1:"+String(ESP.getFreeHeap()));
     String sitemapStr;
     httpRequest(restUrl + "/sitemaps/" + OPENHAB_SITEMAP, sitemapStr);
+    debug(F("updateSiteMap"),"2:"+String(ESP.getFreeHeap()));
     deserializeJson(sitemap, sitemapStr);
-    for(byte i = 0; i < 6; i++) {
+    debug(F("updateSiteMap"),"3:"+String(ESP.getFreeHeap()));
+    for(byte i = 0; i < 6; i++) { //6
         if (! sitemap["homepage"]["widgets"][i]["type"].isNull())
         {
         String type = sitemap["homepage"]["widgets"][i]["type"];
@@ -154,11 +163,14 @@ void updateSiteMap(){
         parseWidgetLabel(slabel, label, state);
         String icon = sitemap["homepage"]["widgets"][i]["icon"];
         Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state);
-        widgets[i].update(label, state, icon);
+        widgets[i].update(label, state, icon, type);
         widgets[i].draw(UPDATE_MODE_GC16); //  UPDATE_MODE_GL16
         }
+        
+    debug(F("updateSiteMap"),"4:"+String(ESP.getFreeHeap()));
     }
     sitemap.clear();
+    debug(F("updateSiteMap"),"5:"+String(ESP.getFreeHeap()));
 }
 
 void parseSubscriptionData(String jsonDataStr)
@@ -167,7 +179,7 @@ void parseSubscriptionData(String jsonDataStr)
     deserializeJson(jsonData, jsonDataStr);
     if (! jsonData["widgetId"].isNull() ) // Data Widget (subscription)
     {
-        Serial.println("Data Widget (subscription)");
+        debug(F("parseSubscriptionData"),F("Data Widget (subscription)"));
         byte widgetId = jsonData["widgetId"];
         String slabel = jsonData["label"];
         String label = "";
@@ -182,14 +194,15 @@ void parseSubscriptionData(String jsonDataStr)
         String jsonDataType = jsonData["TYPE"];
         if ( jsonDataType.equals("ALIVE") )
         {
-            Serial.println("Subscription Alive");
+            debug(F("parseSubscriptionData"),F("Subscription Alive"));
         }
         else if ( jsonDataType.equals("SITEMAP_CHANGED") )
         {
-            Serial.println("Sitemap changed, reloading");
+            debug(F("parseSubscriptionData"),F("Sitemap changed, reloading"));
             updateSiteMap();
         }
     }
+    jsonData.clear();
 }
 
 void displaySysInfo()
@@ -262,15 +275,15 @@ void setup()
     canvas.createRender(FONT_SIZE_STATUS_BOTTOM,FONT_CACHE_SIZE);
 
     // Setup Wifi
-    Serial.println("Starting Wifi");
+    Serial.println(F("Starting Wifi"));
     WiFi.begin(WIFI_SSID, WIFI_PSK);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
+    Serial.println();
+    Serial.println(F("WiFi connected"));
+    Serial.println(F("IP address: "));
     Serial.println(WiFi.localIP());
 
     // Init widgets
@@ -279,6 +292,8 @@ void setup()
         int y = i / BUTTONS_X;
         widgets[i].init(i, 0, 40 + x * (40 + BUTTON_SIZE), 40 + y * (40 + BUTTON_SIZE));
     }
+    displaySysInfo();
+    subscribe();
     updateSiteMap();
 }
 
@@ -287,12 +302,21 @@ void loop()
 {
     // subscribe or re-subscribe to sitemap
     if (! SubscribeClient.connected()) {
-        Serial.println("SubscribeClient not connected, connecting...");
+        Serial.println(F("SubscribeClient not connected, connecting..."));
         if (! subscribe()) { delay(300); }
     }
 
+    // check if subscription is alive - NOT WORKING
+   /* currentSubscriptionAliveMillis = millis();
+    if ( (currentSubscriptionAliveMillis-previousSubscriptionAliveMillis) > 180000) // no sitemap update for more than 180s
+    {
+        debug("loop","Subscription seems dead (current=" + String(currentSubscriptionAliveMillis)+" previous="+previousSubscriptionAliveMillis);
+        if (! subscribe()) { delay(300); }
+    }  */ 
+
     // Check and get subscription data    
     while (SubscribeClient.available()) {
+        previousSubscriptionAliveMillis = millis();
         String SubscriptionReceivedData = SubscribeClient.readStringUntil('\n');
         int dataStart = SubscriptionReceivedData.indexOf("data: ");
         if (dataStart > -1) // received data contains "data: "
@@ -304,6 +328,51 @@ void loop()
         }   
     }
     
+    // Check touch
+
+/*
+    if (M5.TP.avaliable())
+    {
+        M5.TP.update();
+        if (! M5.TP.isFingerUp()) 
+        {
+            tp_finger_t FingerItem = M5.TP.readFinger(0);
+            debug("loop","touchdown at X="+String(FingerItem.x)+" Y="+String(FingerItem.y));
+
+            for(byte i = 0; i < WIDGET_COUNT; i++)
+                widgets[i].testIfTouched(FingerItem.x,FingerItem.y);
+        }
+    }
+*/
+
+        if (M5.TP.avaliable())
+        {
+
+            M5.TP.update();
+            bool is_finger_up = M5.TP.isFingerUp();
+            if(is_finger_up || (_last_pos_x != M5.TP.readFingerX(0)) || (_last_pos_y != M5.TP.readFingerY(0)))
+            {
+                _last_pos_x = M5.TP.readFingerX(0);
+                _last_pos_y = M5.TP.readFingerY(0);
+                if(is_finger_up)
+                {
+                    //debug("loop","touch up at X="+String(_last_pos_x)+" Y="+String(_last_pos_y));
+                }
+                else
+                {
+                    //EPDGUI_Process(M5.TP.readFingerX(0), M5.TP.readFingerY(0));
+                    
+                    //debug("loop","touch down at X="+String(_last_pos_x)+" Y="+String(_last_pos_y));
+                    
+                    for(byte i = 0; i < WIDGET_COUNT; i++)
+                    widgets[i].testIfTouched(_last_pos_x,_last_pos_y);
+                }
+            }
+            M5.TP.flush();
+        }
+
+
+    // Display sysinfo
     if ( DISPLAY_SYSINFO ) {
         currentSysInfoMillis = millis();
         if ( (currentSysInfoMillis-previousSysInfoMillis) > 10000) 

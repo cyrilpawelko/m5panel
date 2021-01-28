@@ -20,13 +20,14 @@ class M5PanelWidget
         String title;
         String value;
         String icon;
+        String type;
         M5EPD_Canvas* canvas;
 
     public:
         void init(byte index, byte page, int xLeftCorner, int yLeftCorner);
-        void update(const String &title, const String &value, const String &icon);
+        void update(const String &title, const String &value, const String &icon, const String &type);
         void update(const String &title, const String &value);
-        //void draw(M5EPD_Canvas* canvas);
+        void testIfTouched(uint16_t x, uint16_t y);
         void draw(m5epd_update_mode_t drawMode);
 };
 
