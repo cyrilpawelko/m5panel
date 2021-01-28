@@ -33,11 +33,14 @@ unsigned long upTime;
 DynamicJsonDocument jsonDoc(30000); // size to be checked
 DynamicJsonDocument sitemap(30000); // Test
 
-uint previousSysInfoMillis = 0;
-uint currentSysInfoMillis;
+int previousSysInfoMillis = 0;
+int currentSysInfoMillis;
 
-uint previousSubscriptionAliveMillis = 0;
-uint currentSubscriptionAliveMillis;
+int previousSubscriptionAliveMillis = 0;
+int currentSubscriptionAliveMillis;
+
+int previousRefreshMillis = 0;
+int currentRefreshMillis;
 
 uint16_t _last_pos_x = 0xFFFF, _last_pos_y = 0xFFFF;
 
@@ -380,5 +383,14 @@ void loop()
             previousSysInfoMillis = currentSysInfoMillis;
             displaySysInfo();
         }
+    }
+
+    // Full refresh every 10 minutes
+    currentRefreshMillis = millis();
+    if ((currentRefreshMillis-previousRefreshMillis) > 600000 )
+    {
+        previousRefreshMillis = currentRefreshMillis;
+        M5.EPD.UpdateFull(UPDATE_MODE_GC16);
+        debug("Loop","Full refresh");
     }
 }
