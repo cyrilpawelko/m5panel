@@ -13,17 +13,20 @@ void M5PanelWidget::init(byte index, byte page, int xLeftCorner, int yLeftCorner
             Serial.println(this->index);            
         }
 
-void M5PanelWidget::update(const String &title, const String &value, const String &icon, const String &type)
+void  M5PanelWidget::update(const String &title, const String &value, const String &itemState, const String &icon, const String &type)
 {
     this->title = title;
     this->value = value;
+    this->itemState = itemState;
     this->icon = icon;
+    this->type = type;
 }
 
-void M5PanelWidget::update(const String &title, const String &value)
+void M5PanelWidget::update(const String &title, const String &value, const String &itemState)
 {
     this->title = title;
     this->value = value;
+    this->itemState = itemState;
     this->icon = icon;
 }
 

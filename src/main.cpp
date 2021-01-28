@@ -165,8 +165,9 @@ void updateSiteMap(){
         String state = "";
         parseWidgetLabel(slabel, label, state);
         String icon = sitemap["homepage"]["widgets"][i]["icon"];
+        String itemState = sitemap["homepage"]["widgets"][i]["item"]["State"];
         Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state);
-        widgets[i].update(label, state, icon, type);
+        widgets[i].update(label, state, itemState, icon, type);
         widgets[i].draw(UPDATE_MODE_GC16); //  UPDATE_MODE_GL16
         }
         
@@ -185,11 +186,12 @@ void parseSubscriptionData(String jsonDataStr)
         debug(F("parseSubscriptionData"),F("Data Widget (subscription)"));
         byte widgetId = jsonData["widgetId"];
         String slabel = jsonData["label"];
+        String itemState = jsonData["item"]["State"];
         String label = "";
         String state = "";
         parseWidgetLabel(slabel, label, state);
         Serial.println("Update Item " + String(widgetId) + " label=" + label + " state=" + state);
-        widgets[widgetId].update(label, state);
+        widgets[widgetId].update(label, state, itemState);
         widgets[widgetId].draw(UPDATE_MODE_GC16); // UPDATE_MODE_A2 
     }
     else if (! jsonData["TYPE"].isNull() )
@@ -332,48 +334,22 @@ void loop()
     }
     
     // Check touch
-
-/*
-    if (M5.TP.avaliable())
-    {
-        M5.TP.update();
-        if (! M5.TP.isFingerUp()) 
-        {
-            tp_finger_t FingerItem = M5.TP.readFinger(0);
-            debug("loop","touchdown at X="+String(FingerItem.x)+" Y="+String(FingerItem.y));
-
-            for(byte i = 0; i < WIDGET_COUNT; i++)
-                widgets[i].testIfTouched(FingerItem.x,FingerItem.y);
-        }
-    }
-*/
-
         if (M5.TP.avaliable())
         {
-
             M5.TP.update();
             bool is_finger_up = M5.TP.isFingerUp();
             if(is_finger_up || (_last_pos_x != M5.TP.readFingerX(0)) || (_last_pos_y != M5.TP.readFingerY(0)))
             {
                 _last_pos_x = M5.TP.readFingerX(0);
                 _last_pos_y = M5.TP.readFingerY(0);
-                if(is_finger_up)
+                if(! is_finger_up)
                 {
-                    //debug("loop","touch up at X="+String(_last_pos_x)+" Y="+String(_last_pos_y));
-                }
-                else
-                {
-                    //EPDGUI_Process(M5.TP.readFingerX(0), M5.TP.readFingerY(0));
-                    
-                    //debug("loop","touch down at X="+String(_last_pos_x)+" Y="+String(_last_pos_y));
-                    
                     for(byte i = 0; i < WIDGET_COUNT; i++)
                     widgets[i].testIfTouched(_last_pos_x,_last_pos_y);
                 }
             }
             M5.TP.flush();
         }
-
 
     // Display sysinfo
     if ( DISPLAY_SYSINFO ) {
