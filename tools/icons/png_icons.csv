@@ -50,7 +50,7 @@ motion-sensor-off;motion-closed
 wifi;network
 wifi-off;network-off
 wifi;network-on
-oil;oil
+water;oil
 power-plug;poweroutlet
 power-socket-au;poweroutlet_au
 power-socket-eu;poweroutlet_eu
@@ -81,5 +81,6 @@ progress-question;unknown
 toggle-switch;wallswitch
 toggle-switch-off;wallswitch-off
 toggle-switch;wallswitch-on
-water;water
+water-outline;water
 window-closed-variant;window
+fuel;fuel
