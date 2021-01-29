@@ -70,34 +70,44 @@ void debug(String function, String message)
     }
 }
 
-boolean httpRequest(String &_url,String &_response)
+bool httpRequest(String &url,String &response)
 {
     HTTPClient http;
-    debug(F("httpRequest"),"HTTP request to " + String(_url));
+    debug(F("httpRequest"),"HTTP request to " + String(url));
     if (WiFi.status() != WL_CONNECTED)
     {
         Serial.println(ERR_WIFI_NOT_CONNECTED);
-        _response = String(ERR_WIFI_NOT_CONNECTED);
+        response = String(ERR_WIFI_NOT_CONNECTED);
         return false;
     }
     http.useHTTP10(true);
     http.setReuse(false);
-    http.begin(_url);
+    http.begin(url);
     int httpCode = http.GET();
     if (httpCode != HTTP_CODE_OK)
     {
         Serial.println(String(ERR_HTTP_ERROR) + String(httpCode));
-        _response = String(ERR_HTTP_ERROR) + String(httpCode);
+        response = String(ERR_HTTP_ERROR) + String(httpCode);
         http.end();
         return false;        
     }
-    _response = http.getString();
+    response = http.getString();
     http.end();
     debug(F("httpRequest"),F("HTTP request done"));
     return true;
 }
 
-boolean subscribe(){
+void postWidgetValue(const String &itemName, const String &newValue)
+{
+    HTTPClient httpPost;
+    httpPost.setReuse(false);
+    httpPost.setReuse(false);
+    httpPost.begin(restUrl + "/items/" + itemName);
+    httpPost.POST(newValue);
+    //httpPost.end();
+}
+
+bool subscribe(){
     String subscribeResponse;
     httpClient.useHTTP10(true);
     httpClient.begin(restUrl + "/sitemaps/events/subscribe");
@@ -117,9 +127,8 @@ boolean subscribe(){
     //String subscriptionURL = jsonDoc["Location"].as<String>();
     String subscriptionURL = jsonDoc["context"]["headers"]["Location"][0];
     debug(F("subscribe"), "Full subscriptionURL: " + subscriptionURL);
-    subscriptionURL = subscriptionURL.substring(subscriptionURL.indexOf("/rest/sitemaps")) + "?sitemap=m5panel&pageid=m5panel";
+    subscriptionURL = subscriptionURL.substring(subscriptionURL.indexOf("/rest/sitemaps")) + "?sitemap=" + OPENHAB_SITEMAP + "&pageid=" + OPENHAB_SITEMAP; // Fix : pageId
     debug(F("subscribe"), "subscriptionURL: " + subscriptionURL);
-        
     SubscribeClient.connect(OPENHAB_HOST,OPENHAB_PORT);
     SubscribeClient.println("GET " + subscriptionURL + " HTTP/1.1");
     SubscribeClient.println("Host: " + String(OPENHAB_HOST) + ":" + String(OPENHAB_PORT) );
@@ -165,9 +174,11 @@ void updateSiteMap(){
         String state = "";
         parseWidgetLabel(slabel, label, state);
         String icon = sitemap["homepage"]["widgets"][i]["icon"];
-        String itemState = sitemap["homepage"]["widgets"][i]["item"]["State"];
-        Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state);
-        widgets[i].update(label, state, itemState, icon, type);
+        String itemState = sitemap["homepage"]["widgets"][i]["item"]["state"];
+        String itemName = sitemap["homepage"]["widgets"][i]["item"]["name"];
+        String itemType = sitemap["homepage"]["widgets"][i]["item"]["type"];
+        Serial.println("Item " + String(i) + " label=" + label + " type="+ type + " icon=" + icon + " state=" + state + " itemName=" + itemName + " itemType=" + itemType +" itemState=" + itemState );
+        widgets[i].update(label, state, itemState, icon, type, itemName, itemType);
         widgets[i].draw(UPDATE_MODE_GC16); //  UPDATE_MODE_GL16
         }
         
@@ -186,12 +197,14 @@ void parseSubscriptionData(String jsonDataStr)
         debug(F("parseSubscriptionData"),F("Data Widget (subscription)"));
         byte widgetId = jsonData["widgetId"];
         String slabel = jsonData["label"];
-        String itemState = jsonData["item"]["State"];
+        String itemState = jsonData["item"]["state"];
+        String itemName = jsonData["item"]["name"];
+        String itemType = jsonData["item"]["type"];
         String label = "";
         String state = "";
         parseWidgetLabel(slabel, label, state);
         Serial.println("Update Item " + String(widgetId) + " label=" + label + " state=" + state);
-        widgets[widgetId].update(label, state, itemState);
+        widgets[widgetId].update(label, state, itemState, itemName, itemType);
         widgets[widgetId].draw(UPDATE_MODE_GC16); // UPDATE_MODE_A2 
     }
     else if (! jsonData["TYPE"].isNull() )
@@ -345,7 +358,21 @@ void loop()
                 if(! is_finger_up)
                 {
                     for(byte i = 0; i < WIDGET_COUNT; i++)
-                    widgets[i].testIfTouched(_last_pos_x,_last_pos_y);
+                    if (widgets[i].testIfTouched(_last_pos_x,_last_pos_y))
+                    {
+                        debug("loop","Widget touched: " + String(i));
+                        String itemName;
+                        String newValue;
+                        widgets[i].getTouchedValues(itemName, newValue);
+                        debug("loop","Touched values: " + itemName +", " + newValue);
+                        if (! itemName.isEmpty()) 
+                        {
+                            debug("loop","POST values: " + itemName +", " + newValue);
+                            postWidgetValue(itemName,newValue);
+                            //widgets[i].update(newValue);
+                            //widgets[i].draw(UPDATE_MODE_GC16);
+                        }
+                    }
                 }
             }
             M5.TP.flush();
@@ -363,10 +390,10 @@ void loop()
 
     // Full refresh every 10 minutes
     currentRefreshMillis = millis();
-    if ((currentRefreshMillis-previousRefreshMillis) > 600000 )
+    if ((currentRefreshMillis-previousRefreshMillis) > 600000 ) // 600000
     {
         previousRefreshMillis = currentRefreshMillis;
-        M5.EPD.UpdateFull(UPDATE_MODE_GC16);
+        M5.EPD.UpdateFull(UPDATE_MODE_GL16);
         debug("Loop","Full refresh");
     }
 }

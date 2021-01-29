@@ -9,37 +9,55 @@ void M5PanelWidget::init(byte index, byte page, int xLeftCorner, int yLeftCorner
             this->type = type;
             this->canvas = new M5EPD_Canvas(&M5.EPD);
             this->canvas->createCanvas(BUTTON_SIZE+4, BUTTON_SIZE+4);
-            Serial.print("M5PanelWidget::init index=");
-            Serial.println(this->index);            
         }
 
-void  M5PanelWidget::update(const String &title, const String &value, const String &itemState, const String &icon, const String &type)
+void  M5PanelWidget::update(const String &title, const String &value, const String &itemState, const String &icon, const String &type, const String &itemName, const String &itemType)
 {
     this->title = title;
     this->value = value;
     this->itemState = itemState;
     this->icon = icon;
     this->type = type;
+    this->itemName = itemName;
+    this->itemType = itemType;
 }
 
-void M5PanelWidget::update(const String &title, const String &value, const String &itemState)
+void M5PanelWidget::update(const String &title, const String &value, const String &itemState, const String &itemName, const String &itemType)
 {
     this->title = title;
     this->value = value;
     this->itemState = itemState;
     this->icon = icon;
+    this->itemName = itemName;
+    this->itemType = itemType;
 }
 
- void M5PanelWidget::testIfTouched(uint16_t x, uint16_t y)
+void M5PanelWidget::update(const String &value)
+{
+    this->value = value;
+}
+
+ bool M5PanelWidget::testIfTouched(uint16_t x, uint16_t y)
  {
     if ((x > xLeftCorner) && (x < (this->xLeftCorner+BUTTON_SIZE)) && (y > yLeftCorner) && (y < (yLeftCorner+BUTTON_SIZE)))
     {
-        Serial.println("Widget touched:" + String(index));
-        // Send command to item
-        if (type="Switch")
-        {
-            // post different state
-        }
+        return true;
+    }
+    else 
+    {
+        return false;
+    }
+}
+
+void M5PanelWidget::getTouchedValues(String &itemName, String &newValue)
+{
+    itemName = this->itemName;
+    newValue = "";
+    if (itemType.equals("Switch"))
+    {
+        Serial.println("Touched item type="+itemType+" itemState="+itemState);
+        if (itemState.equals("ON")) { newValue = "OFF"; }
+        else if (itemState.equals("OFF")) { newValue = "ON"; }
     }
 }
 
