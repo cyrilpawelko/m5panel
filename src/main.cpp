@@ -36,9 +36,6 @@ DynamicJsonDocument sitemap(30000); // Test
 int previousSysInfoMillis = 0;
 int currentSysInfoMillis;
 
-int previousSubscriptionAliveMillis = 0;
-int currentSubscriptionAliveMillis;
-
 int previousRefreshMillis = 0;
 int currentRefreshMillis;
 
@@ -324,14 +321,6 @@ void loop()
         if (! subscribe()) { delay(300); }
     }
 
-    // check if subscription is alive - NOT WORKING
-   /* currentSubscriptionAliveMillis = millis();
-    if ( (currentSubscriptionAliveMillis-previousSubscriptionAliveMillis) > 180000) // no sitemap update for more than 180s
-    {
-        debug("loop","Subscription seems dead (current=" + String(currentSubscriptionAliveMillis)+" previous="+previousSubscriptionAliveMillis);
-        if (! subscribe()) { delay(300); }
-    }  */ 
-
     // Check and get subscription data    
     while (SubscribeClient.available()) {
         previousSubscriptionAliveMillis = millis();
@@ -388,7 +377,7 @@ void loop()
         }
     }
 
-    // Full refresh every 10 minutes
+    // Full refresh every 10 minutes to clear artefacts
     currentRefreshMillis = millis();
     if ((currentRefreshMillis-previousRefreshMillis) > 600000 ) // 600000
     {
