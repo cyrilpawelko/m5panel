@@ -55,7 +55,7 @@ void M5PanelWidget::getTouchedValues(String &itemName, String &newValue)
     newValue = "";
     if (itemType.equals("Switch"))
     {
-        Serial.println("Touched item type="+itemType+" itemState="+itemState);
+        //Serial.println("Touched item type="+itemType+" itemState="+itemState);
         if (itemState.equals("ON")) { newValue = "OFF"; }
         else if (itemState.equals("OFF")) { newValue = "ON"; }
     }

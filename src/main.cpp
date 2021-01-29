@@ -132,7 +132,6 @@ bool subscribe(){
     SubscribeClient.println(F("Accept: text/event-stream"));
     SubscribeClient.println(F("Connection: keep-alive"));
     SubscribeClient.println();
-    previousSubscriptionAliveMillis = millis();
     return true;
 }
 
@@ -315,7 +314,7 @@ void setup()
 // Loop
 void loop()
 {
-    // subscribe or re-subscribe to sitemap
+    // Subscribe or re-subscribe to sitemap
     if (! SubscribeClient.connected()) {
         Serial.println(F("SubscribeClient not connected, connecting..."));
         if (! subscribe()) { delay(300); }
@@ -323,12 +322,11 @@ void loop()
 
     // Check and get subscription data    
     while (SubscribeClient.available()) {
-        previousSubscriptionAliveMillis = millis();
         String SubscriptionReceivedData = SubscribeClient.readStringUntil('\n');
         int dataStart = SubscriptionReceivedData.indexOf("data: ");
         if (dataStart > -1) // received data contains "data: "
         {
-            String SubscriptionData = SubscriptionReceivedData.substring(dataStart+6); // cut data before "data: "
+            String SubscriptionData = SubscriptionReceivedData.substring(dataStart+6); // Remove chars before "data: "
             int dataEnd = SubscriptionData.indexOf("\n\n");
             SubscriptionData = SubscriptionData.substring(0,dataEnd);
             parseSubscriptionData(SubscriptionData);
@@ -354,12 +352,10 @@ void loop()
                         String newValue;
                         widgets[i].getTouchedValues(itemName, newValue);
                         debug("loop","Touched values: " + itemName +", " + newValue);
-                        if (! itemName.isEmpty()) 
+                        if (! newValue.isEmpty()) 
                         {
                             debug("loop","POST values: " + itemName +", " + newValue);
                             postWidgetValue(itemName,newValue);
-                            //widgets[i].update(newValue);
-                            //widgets[i].draw(UPDATE_MODE_GC16);
                         }
                     }
                 }
