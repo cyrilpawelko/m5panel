@@ -15,7 +15,7 @@
 #define DEBUG                   true
 
 #define WIDGET_COUNT            6
-#define FONT_CACHE_SIZE         255 // 256
+#define FONT_CACHE_SIZE         256 // 256
 // Global vars
 
 M5EPD_Canvas canvas(&M5.EPD);
@@ -222,7 +222,7 @@ void parseSubscriptionData(String jsonDataStr)
 void displaySysInfo()
 {
     // Display system information
-    canvas.setTextSize(FONT_SIZE_STATUS_BOTTOM); 
+    canvas.setTextSize(FONT_SIZE_LABEL); 
     canvas.setTextDatum(TL_DATUM);
 
     canvas.drawString("Free Heap:",0,230);
@@ -347,15 +347,16 @@ void loop()
                     for(byte i = 0; i < WIDGET_COUNT; i++)
                     if (widgets[i].testIfTouched(_last_pos_x,_last_pos_y))
                     {
-                        debug("loop","Widget touched: " + String(i));
+                        //debug("loop","Widget touched: " + String(i));
                         String itemName;
                         String newValue;
                         widgets[i].getTouchedValues(itemName, newValue);
-                        debug("loop","Touched values: " + itemName +", " + newValue);
+                        //debug("loop","Touched values: " + itemName +", " + newValue);
                         if (! newValue.isEmpty()) 
                         {
-                            debug("loop","POST values: " + itemName +", " + newValue);
+                            widgets[i].drawPushedBorder(UPDATE_MODE_A2);
                             postWidgetValue(itemName,newValue);
+                            //debug("loop","POST values: " + itemName +", " + newValue);
                         }
                     }
                 }

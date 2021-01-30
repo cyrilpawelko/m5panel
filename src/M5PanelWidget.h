@@ -9,8 +9,6 @@
 #define FONT_SIZE_STATUS_CENTER 48
 #define FONT_SIZE_STATUS_BOTTOM 36
 
-
-
 class M5PanelWidget
 {
     private:
@@ -32,6 +30,7 @@ class M5PanelWidget
         void update(const String &title, const String &value, const String &itemState, const String &itemName, const String &itemType);
         //void update(const String &value);
         void draw(m5epd_update_mode_t drawMode);
+        void drawPushedBorder(m5epd_update_mode_t drawMode);
         bool testIfTouched(uint16_t x, uint16_t y);
         void getTouchedValues(String &item, String &newValue);
 };

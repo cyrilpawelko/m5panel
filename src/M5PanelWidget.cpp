@@ -110,9 +110,15 @@ void M5PanelWidget::draw(m5epd_update_mode_t drawMode)
         this->canvas->drawString(value,BUTTON_SIZE/2+2,BUTTON_SIZE-45+2); // 40
         bottomTime = millis();
     }
-
     // Push canvas
     this->canvas->pushCanvas(xLeftCorner, yLeftCorner, drawMode); // UPDATE_MODE_GL16 (higher quality)   or UPDATE_MODE_A2 (no flipping)
     long canvasTime = millis();
     Serial.println("Draw stats (ms): title=" + String(titleTime-startTime) +  " icon=" + String(iconTime - titleTime) + " bottom=" + String(bottomTime-iconTime)+ " canvas=" + String(canvasTime-bottomTime));
+}
+
+void M5PanelWidget::drawPushedBorder(m5epd_update_mode_t drawMode)
+{
+    canvas->drawRect(4, 4, BUTTON_SIZE-4, BUTTON_SIZE-4, 15);
+    canvas->drawRect(5, 5, BUTTON_SIZE-5, BUTTON_SIZE-5, 15);
+    canvas->pushCanvas(xLeftCorner, yLeftCorner, drawMode);
 }
