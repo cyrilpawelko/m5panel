@@ -32,10 +32,11 @@ void M5PanelWidget::update(const String &title, const String &value, const Strin
     this->itemType = itemType;
 }
 
+/*
 void M5PanelWidget::update(const String &value)
 {
     this->value = value;
-}
+}*/
 
  bool M5PanelWidget::testIfTouched(uint16_t x, uint16_t y)
  {
@@ -87,7 +88,7 @@ void M5PanelWidget::draw(m5epd_update_mode_t drawMode)
     }
     else
     {
-        String iconFile = "/icons/"+icon+"-"+value+".png"; // Try to find dynamic icon ...
+        String iconFile = "/icons/"+icon+"-"+itemState+".png"; // Try to find dynamic icon ...
         iconFile.toLowerCase();
         if (! SPIFFS.exists(iconFile))
         {
