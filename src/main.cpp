@@ -98,7 +98,7 @@ void postWidgetValue(const String &itemName, const String &newValue)
 {
     HTTPClient httpPost;
     httpPost.setReuse(false);
-    httpPost.setReuse(false);
+    httpPost.addHeader(F("Content-Type"),F("text/plain"));
     httpPost.begin(restUrl + "/items/" + itemName);
     httpPost.POST(newValue);
     //httpPost.end();
@@ -370,6 +370,8 @@ void loop()
         {
             previousSysInfoMillis = currentSysInfoMillis;
             displaySysInfo();
+            //debug("loop","Total PSRAM: %d" + String(ESP.getPsramSize()));
+            //debug("loop","Free PSRAM: %d" + String(ESP.getFreePsram()));
         }
     }
 
