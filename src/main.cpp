@@ -98,8 +98,8 @@ void postWidgetValue(const String &itemName, const String &newValue)
 {
     HTTPClient httpPost;
     httpPost.setReuse(false);
-    httpPost.addHeader(F("Content-Type"),F("text/plain"));
     httpPost.begin(restUrl + "/items/" + itemName);
+    httpPost.addHeader(F("Content-Type"),F("text/plain"));
     httpPost.POST(newValue);
     //httpPost.end();
 }
