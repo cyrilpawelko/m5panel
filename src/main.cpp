@@ -2,11 +2,11 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
-#include <SPIFFS.h>
 #include <FS.h>
+#include <LITTLEFS.h>
+#include <regex>
 #include "M5PanelWidget.h"
 #include "defs.h"
-#include <regex>
 
 #define ERR_WIFI_NOT_CONNECTED  "ERROR: Wifi not connected"
 #define ERR_HTTP_ERROR          "ERROR: HTTP code "
@@ -15,9 +15,9 @@
 #define DEBUG                   true
 
 #define WIDGET_COUNT            6
-#define FONT_CACHE_SIZE         256 // 256
-// Global vars
+#define FONT_CACHE_SIZE         256
 
+// Global vars
 M5EPD_Canvas canvas(&M5.EPD);
 M5PanelWidget* widgets = new M5PanelWidget[WIDGET_COUNT];
 HTTPClient httpClient;
@@ -261,9 +261,16 @@ void setup()
         Serial.println(F("!An error occurred during SPIFFS mounting"));
     }
 
-    // Get all information of SPIFFS
-    unsigned int totalBytes = SPIFFS.totalBytes();
-    unsigned int usedBytes = SPIFFS.usedBytes();
+    Serial.println(F("Inizializing LITTLEFS FS..."));
+    if (LITTLEFS.begin()){
+        Serial.println(F("LITTLEFS mounted correctly."));
+    }else{
+        Serial.println(F("!An error occurred during LITTLEFS mounting"));
+    }
+
+    // Get all information of LITTLEFS
+    unsigned int totalBytes = LITTLEFS.totalBytes();
+    unsigned int usedBytes = LITTLEFS.usedBytes();
  
     // TODO : Should fail and stop if SPIFFS error
 
@@ -280,7 +287,7 @@ void setup()
     Serial.println();
 
     canvas.createCanvas(160, 540);
-    canvas.loadFont("/FreeSansBold.ttf", SPIFFS);
+    canvas.loadFont("/FreeSansBold.ttf", LITTLEFS);
     // TODO : Should fail and stop if font not found
 
     canvas.setTextSize(FONT_SIZE_LABEL);

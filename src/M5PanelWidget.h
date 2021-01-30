@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <M5EPD.h>
+#include <LITTLEFS.h>
 
 #define BUTTONS_X               3       // bttons columns
 #define BUTTONS_Y               2       // buttons rows

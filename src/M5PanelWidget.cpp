@@ -90,17 +90,17 @@ void M5PanelWidget::draw(m5epd_update_mode_t drawMode)
     {
         String iconFile = "/icons/"+icon+"-"+itemState+".png"; // Try to find dynamic icon ...
         iconFile.toLowerCase();
-        if (! SPIFFS.exists(iconFile))
+        if (! LITTLEFS.exists(iconFile))
         {
             iconFile = "/icons/"+icon+".png";              // else try to find non dynamic icon
             iconFile.toLowerCase();
-            if (! SPIFFS.exists(iconFile))
+            if (! LITTLEFS.exists(iconFile))
             {
                 iconFile = "/icons/unknown.png";      // else use icon "unknown"
             }
         }
         //Serial.println("icon file="+iconFile);
-        this->canvas->drawPngFile(SPIFFS,iconFile.c_str(),BUTTON_SIZE/2-48+2,55+2,0,0,0,0,1);
+        this->canvas->drawPngFile(LITTLEFS,iconFile.c_str(),BUTTON_SIZE/2-48+2,55+2,0,0,0,0,1);
         
         iconTime = millis();
 
