@@ -116,6 +116,12 @@ void M5PanelWidget::draw(m5epd_update_mode_t drawMode)
     Serial.println("Draw stats (ms): title=" + String(titleTime-startTime) +  " icon=" + String(iconTime - titleTime) + " bottom=" + String(bottomTime-iconTime)+ " canvas=" + String(canvasTime-bottomTime));
 }
 
+void M5PanelWidget::clear()
+{
+    canvas->fillCanvas(0);
+    canvas->pushCanvas(xLeftCorner, yLeftCorner, UPDATE_MODE_GC16); 
+}
+
 void M5PanelWidget::drawPushedBorder(m5epd_update_mode_t drawMode)
 {
     canvas->drawRect(4, 4, BUTTON_SIZE-4, BUTTON_SIZE-4, 15);

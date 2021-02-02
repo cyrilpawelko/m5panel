@@ -177,6 +177,10 @@ void updateSiteMap(){
         widgets[i].update(label, state, itemState, icon, type, itemName, itemType);
         widgets[i].draw(UPDATE_MODE_GC16); //  UPDATE_MODE_GL16
         }
+    else
+    {
+         widgets[i].clear();
+    }
         
     debug(F("updateSiteMap"),"4:"+String(ESP.getFreeHeap()));
     }
