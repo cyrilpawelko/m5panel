@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 #include <FS.h>
 #include <LITTLEFS.h>
+#include <ezTime.h>
 #include <regex>
 #include "M5PanelWidget.h"
 #include "defs.h"
@@ -40,6 +41,8 @@ int previousRefreshMillis = 0;
 int currentRefreshMillis;
 
 uint16_t _last_pos_x = 0xFFFF, _last_pos_y = 0xFFFF;
+
+Timezone openhabTZ;
 
 #ifndef OPENHAB_SITEMAP
     #define OPENHAB_SITEMAP "m5panel"
@@ -101,7 +104,7 @@ void postWidgetValue(const String &itemName, const String &newValue)
     httpPost.begin(restUrl + "/items/" + itemName);
     httpPost.addHeader(F("Content-Type"),F("text/plain"));
     httpPost.POST(newValue);
-    //httpPost.end();
+    //httpPost.end();           // to be fixed, http client should be ended, but it also closes subscription client
 }
 
 bool subscribe(){
@@ -223,17 +226,75 @@ void parseSubscriptionData(String jsonDataStr)
     jsonData.clear();
 }
 
+void setTimeZone() // Gets timezone from OpenHAB
+{
+    String response;
+    if (httpRequest(restUrl + "/services/org.eclipse.smarthome.i18n/config",response))
+    {
+        //DynamicJsonDocument doc(2000);
+        deserializeJson(jsonDoc, response);
+        String timezone = jsonDoc["timezone"];
+        debug("setTimeZone","OpenHAB timezone= " + timezone);
+        jsonDoc.clear();
+        openhabTZ.setLocation(timezone);
+    }
+    else
+    {
+        debug("setTimeZone","Could not get OpenHAB timezone");
+    }
+}
+
+void syncRTC()
+{
+    /*
+    RTCtime.hour = now.hour
+    RTCtime.min  = timeClient.getMinutes();
+    RTCtime.sec  = timeClient.getSeconds();
+    M5.RTC.setTime(&RTCtime);
+
+    RTCDate.year = timeClient.getDay();
+    RTCDate.mon  = timeClient.getHours();
+    RTCDate.day  = timeClient.getDay();
+    M5.RTC.setDate(&RTCDate);
+*/
+    /*
+    String dateTime = getItemState(OPENHAB_DATETIME_ITEM);
+    RTCtime.hour = dateTime.substring(11,13).toInt();    
+    RTCtime.min  = dateTime.substring(14,16).toInt();
+    RTCtime.sec  = dateTime.substring(17,19).toInt();
+    debug("syncRTC","Time="+String(RTCtime.hour)+":"+String(RTCtime.min)+":"+String(RTCtime.sec));
+    M5.RTC.setTime(&RTCtime);
+
+    RTCDate.year = dateTime.substring(0,4).toInt();
+    RTCDate.mon  = dateTime.substring(5,7).toInt();
+    RTCDate.day  = dateTime.substring(8,10).toInt();
+    debug("syncRTC","Date="+String(RTCDate.year)+"-"+String(RTCDate.mon)+"-"+String(RTCDate.day));
+    M5.RTC.setDate(&RTCDate);
+    */
+
+}
+
 void displaySysInfo()
 {
     // Display system information
+    canvas.setTextSize(FONT_SIZE_STATUS_CENTER); 
+    canvas.setTextDatum(TC_DATUM);
+
+    /*M5.RTC.getTime(&RTCtime);
+    char time[6];
+    snprintf(time,sizeof(time),"%02d:%02d",RTCtime.hour,RTCtime.min);
+    canvas.drawString(time,80,30);*/
+
+    canvas.drawString(openhabTZ.dateTime("H:i"), 80, 40);
+
     canvas.setTextSize(FONT_SIZE_LABEL); 
     canvas.setTextDatum(TL_DATUM);
 
-    canvas.drawString("Free Heap:",0,230);
-    canvas.drawString(String(ESP.getFreeHeap())+ " B",0,270);
+    canvas.drawString("Free Heap:",0,250);
+    canvas.drawString(String(ESP.getFreeHeap())+ " B",0,290);
 
-    canvas.drawString("Voltage: ",0,330);
-    canvas.drawString(String(M5.getBatteryVoltage())+ " mV",0,370);
+    canvas.drawString("Voltage: ",0,340);
+    canvas.drawString(String(M5.getBatteryVoltage())+ " mV",0,380);
 
     upTime = millis()/(60000);
     canvas.drawString("Uptime: ",0,430);
@@ -243,8 +304,8 @@ void displaySysInfo()
 
 void setup()
 {
-    M5.begin();
-
+    M5.begin(true,false,true,true,false); // bool touchEnable = true, bool SDEnable = false, bool SerialEnable = true, bool BatteryADCEnable = true, bool I2CEnable = false
+    M5.disableEXTPower(); 
 /* Uncomment for static IP
     IPAddress ip(192,168,0,xxx);    // Node Static IP
     IPAddress gateway(192,168,0,xxx); // Network Gateway (usually Router IP)
@@ -317,6 +378,11 @@ void setup()
         int y = i / BUTTONS_X;
         widgets[i].init(i, 0, 40 + x * (40 + BUTTON_SIZE), 40 + y * (40 + BUTTON_SIZE));
     }
+    // NTP stuff
+    setInterval(3600);
+    waitForSync();
+    setTimeZone();
+
     displaySysInfo();
     subscribe();
     updateSiteMap();
@@ -395,4 +461,5 @@ void loop()
         M5.EPD.UpdateFull(UPDATE_MODE_GL16);
         debug("Loop","Full refresh");
     }
+    events(); // for ezTime
 }
