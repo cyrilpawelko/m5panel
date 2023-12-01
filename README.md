@@ -14,7 +14,7 @@ While the is no power optimizations, it can already run several hours on battery
 It has been tested with OpenHAB 2.5 and 3.0
 
 ## See Also
-Visit (https://github.com/TAKeanice/m5panel) for a more advanced fork
+Visit https://github.com/TAKeanice/m5panel for a more advanced fork
 
 ## How to
  - Clone and open in PlatformIO
